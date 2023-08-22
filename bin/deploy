@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+source ./bin/exports_from_dotenv ".env"
+docker-compose -f docker-compose.production.yml build
+aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
+
+docker tag ${APP_NAME}:${DOCKER_TAG} ${DOCKER_REPOSITORY}:${DOCKER_TAG}
+docker push ${DOCKER_REPOSITORY}:${DOCKER_TAG}

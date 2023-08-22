@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+ENVFILE=${1:-.env}
+if [ -f $ENVFILE ]; then
+   export $(egrep -v '^#' ${ENVFILE} | xargs)
+else
+   echo "File $ENVFILE does not exist, ignored."
+fi
+
+
+
