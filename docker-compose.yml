@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  app:
+    platform: linux/x86_64
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/var/task
+      - /var/task/.git
+      - /var/task/node_modules
+      - ./tmp:/tmp
+    ports:
+      - 9000:8080

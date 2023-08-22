@@ -1,0 +1,16 @@
+{
+  "name": "lambda-pdf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chromium": "^3.0.3",
+    "puppeteer": "^21.0.3"
+  }
+}
