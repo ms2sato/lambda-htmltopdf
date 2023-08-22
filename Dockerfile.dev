@@ -1,9 +1,15 @@
 FROM public.ecr.aws/lambda/nodejs:16
 
 # see https://stackoverflow.com/questions/64988497/not-able-to-install-libatk-bridge-2-0-so-0-on-amazon-linux-ami
-RUN yum install -y cups-libs dbus-glib libXrandr libXcursor libXinerama cairo cairo-gobject pango \
-   atk at-spi2-atk libxkbcommon libXcomposite \
-   alsa-lib # for libsound.so
+# RUN yum install -y cups-libs dbus-glib libXrandr libXcursor libXinerama cairo cairo-gobject pango \
+#    atk at-spi2-atk libxkbcommon libXcomposite \
+#    alsa-lib # for libsound.so \
+#    ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
+# RUN fc-cache -fv
+
+RUN yum install -y amazon-linux-extras
+RUN amazon-linux-extras install -y epel
+RUN yum install -y chromium ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY package*.json ./

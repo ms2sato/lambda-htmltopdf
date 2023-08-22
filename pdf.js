@@ -1,30 +1,40 @@
-const chromium = require("chromium");
 const puppeteer = require("puppeteer");
 
-exports.outputPdf = async () => {
-  let browser = null;
-  const ep = await chromium.executablePath;
-  console.log("executable path ", ep);
+// @see https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-on-gitlabci
 
-  browser = await puppeteer.launch({
+exports.outputPdf = async () => {
+  const browser = await puppeteer.launch({
     headless: true,
-    args: [...Array.from(chromium.args || []), "--no-sandbox"],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: ep,
-    headless: chromium.headless,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
   });
 
   const page = await browser.newPage();
-
+  
   await page.setContent(
-    `<h1>test:日本語:Your awesome PDF report template</h1>`
+    `
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <h1>test:日本語:Your awesome PDF report template</h1>
+  </body>
+</html>`
   );
 
   return await page.pdf({
-    path: "/tmp/pdfReport.pdf", // TAKE ATTENTION!!
+    path: "/tmp/pdfReport.pdf",
     format: "A4",
     printBackground: true,
     margin: { top: 20, left: 20, right: 20, bottom: 20 },
     displayHeaderFooter: true,
   });
+
+  // await page.goto("https://jp.quora.com/");
+  // await page.screenshot({ path: `/tmp/_${Date.now()}.png` });
+  // return await page.pdf({ path: `/tmp/pdfTest.pdf` });
 };
