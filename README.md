@@ -32,3 +32,7 @@ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d
 
 {"statusCode":200,"body":"\"Hello from Lambda!\""}
 ```
+
+
+### dev bucket
+http://localhost:4566/test-bucket/
