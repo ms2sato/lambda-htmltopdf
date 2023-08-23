@@ -27,17 +27,21 @@ exports.outputPdf = async () => {
   </head>
   <body>
     <h1>test:日本語:Your awesome PDF report template</h1>
+    <h2 class="title">title</h2>
   </body>
 </html>`
   );
 
-  return await page.pdf({
-    path: "/tmp/pdfReport.pdf",
+  const params = {
     format: "A4",
     printBackground: true,
     margin: { top: 20, left: 20, right: 20, bottom: 20 },
     displayHeaderFooter: true,
-  });
+  };
+
+  return await page.pdf(
+    process.env.DEBUG ? { path: "/tmp/debug.pdf", ...params } : params
+  );
 
   // await page.goto("https://jp.quora.com/");
   // await page.screenshot({ path: `/tmp/_${Date.now()}.png` });

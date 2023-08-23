@@ -16,6 +16,9 @@ services:
       - 9000:8080
     environment:
       - LOCAL=true
+      - DEBUG=${DEBUG:-true}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-test-bucket}
 
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
