@@ -10,3 +10,9 @@ aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS 
 # MUST set latest tag
 docker tag ${APP_NAME}:${DOCKER_TAG} ${DOCKER_REPOSITORY}:latest
 docker push ${DOCKER_REPOSITORY}:latest
+
+aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION} --image-uri ${DOCKER_REPOSITORY}:latest --no-cli-pager
+
+echo "Waiting for ${AWS_LAMBDA_FUNCTION} to be deployed..."
+aws lambda wait function-updated-v2 --function-name ${AWS_LAMBDA_FUNCTION}
+echo "Deployed ${AWS_LAMBDA_FUNCTION} successfully"
