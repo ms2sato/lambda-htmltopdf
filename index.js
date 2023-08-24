@@ -21,9 +21,19 @@ if (process.env.LOCAL === "true") {
   client = new S3Client({ region });
 }
 
-exports.handler = async ({ key }) => {
-  const pdf = await outputPdf();
+exports.handler = async ({ targets }) => {
+  const rets = await outputPdf(targets);
 
+  await Promise.all(rets.map(({ pdf, key }) => putToS3(pdf, key)));
+
+  const response = {
+    statusCode: 200,
+    body: { bucket: bucket, key: targets.map(target => target.key) },
+  };
+  return response;
+};
+
+const putToS3 = async (pdf, key) => {
   const params = {
     Body: Buffer.from(pdf),
     Bucket: bucket,
@@ -34,10 +44,4 @@ exports.handler = async ({ key }) => {
 
   const command = new PutObjectCommand(params);
   await client.send(command);
-
-  const response = {
-    statusCode: 200,
-    body: { bucket: params.Bucket, key: params.Key },
-  };
-  return response;
 };
