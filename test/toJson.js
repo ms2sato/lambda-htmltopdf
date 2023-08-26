@@ -2,7 +2,7 @@
 const fs = require("fs");
 
 const params = {
-  key: "debug1.pdf",
+  key: "mydir/debug1.pdf",
   content: `
     <html>
       <head>
@@ -20,6 +20,9 @@ const params = {
       margin: { top: 20, left: 20, right: 20, bottom: 20 },
       displayHeaderFooter: true,
     },
+    signedUrl: {
+      expiresIn: "3600",
+    }
   },
 };
 

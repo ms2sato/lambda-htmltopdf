@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require("fs");
 const puppeteer = require("puppeteer");
 
 // @see https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-on-gitlabci
@@ -34,9 +36,14 @@ const openAndSave = async ({ key, content, option }) => {
     await page.setContent(content);
 
     const params = { ...defaultPdfOption, ...option?.pdf };
-    const pdf = await page.pdf(
-      process.env.DEBUG ? { path: `/tmp/${key}`, ...params } : params
-    );
+    let pdf
+    if (process.env.DEBUG) {
+      const tmpPath = `/tmp/${key}`;
+      fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
+      pdf = await page.pdf({ path: tmpPath, ...params });
+    } else {
+      pdf = await page.pdf(params);
+    }
 
     return { pdf, key };
 

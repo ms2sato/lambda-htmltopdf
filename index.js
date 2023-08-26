@@ -38,11 +38,11 @@ exports.handler = async (event) => {
 const execute = async (event) => {
   const { pdf, key } = await outputPdf(event);
 
-  const ret = await putToS3(pdf, key);
+  const ret = await putToS3(pdf, key, event.option?.signedUrl);
   return { key, ...ret };
 };
 
-const putToS3 = async (pdf, key) => {
+const putToS3 = async (pdf, key, signedUrlOption) => {
   const params = {
     Body: Buffer.from(pdf),
     Bucket: bucket,
@@ -54,10 +54,18 @@ const putToS3 = async (pdf, key) => {
   const command = new PutObjectCommand(params);
   await client.send(command);
 
+  if (signedUrlOption === undefined) {
+    return {};
+  }
+
   const getObjectCommand = new GetObjectCommand({
     Bucket: params.Bucket,
     Key: params.Key,
   });
-  const signedUrl = await getSignedUrl(client, getObjectCommand, { expiresIn: 3600 });
+  const signedUrl = await getSignedUrl(
+    client,
+    getObjectCommand,
+    typeof signedUrlOption === "boolean" ? {} : signedUrlOption
+  );
   return { signedUrl };
 };
