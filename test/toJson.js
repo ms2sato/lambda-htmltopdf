@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 const fs = require("fs");
 
-const targets = [
-  {
-    key: "debug1.pdf",
-    content: `
+const params = {
+  key: "debug1.pdf",
+  content: `
     <html>
       <head>
         <meta charset="utf-8">
@@ -14,20 +13,14 @@ const targets = [
         <h2 class="title">title</h2>
       </body>
     </html>`,
+  option: {
+    pdf: {
+      format: "A4",
+      printBackground: true,
+      margin: { top: 20, left: 20, right: 20, bottom: 20 },
+      displayHeaderFooter: true,
+    },
   },
-  {
-    key: "debug2.pdf",
-    content: `
-    <html>
-      <head>
-        <meta charset="utf-8">
-      </head>
-      <body>
-        <h1>[2]test:日本語:Your awesome PDF report template</h1>
-        <h2 class="title">title</h2>
-      </body>
-    </html>`,
-  },
-];
+};
 
-fs.writeFileSync("./test/body.json", JSON.stringify({ targets }, null, 2));
+fs.writeFileSync("./test/body.json", JSON.stringify(params, null, 2));

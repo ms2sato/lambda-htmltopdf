@@ -1,5 +1,10 @@
 const { outputPdf } = require("./pdf");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
 
 if (!process.env.AWS_S3_BUCKET) {
@@ -21,16 +26,20 @@ if (process.env.LOCAL === "true") {
   client = new S3Client({ region });
 }
 
-exports.handler = async ({ targets }) => {
-  const rets = await outputPdf(targets);
-
-  await Promise.all(rets.map(({ pdf, key }) => putToS3(pdf, key)));
-
+exports.handler = async (event) => {
+  const ret = await execute(event);
   const response = {
     statusCode: 200,
-    body: { bucket: bucket, key: targets.map(target => target.key) },
+    body: { bucket, ...ret },
   };
   return response;
+};
+
+const execute = async (event) => {
+  const { pdf, key } = await outputPdf(event);
+
+  const ret = await putToS3(pdf, key);
+  return { key, ...ret };
 };
 
 const putToS3 = async (pdf, key) => {
@@ -44,4 +53,11 @@ const putToS3 = async (pdf, key) => {
 
   const command = new PutObjectCommand(params);
   await client.send(command);
+
+  const getObjectCommand = new GetObjectCommand({
+    Bucket: params.Bucket,
+    Key: params.Key,
+  });
+  const signedUrl = await getSignedUrl(client, getObjectCommand, { expiresIn: 3600 });
+  return { signedUrl };
 };
