@@ -4,8 +4,7 @@ set -e
 
 source ./bin/exports_from_dotenv ".env"
 
-#docker build -t ${APP_NAME}:${DOCKER_TAG} .
-docker-compose -f docker-compose.prod.yml build
+docker build -t ${APP_NAME}:${DOCKER_TAG} .
 
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
 
