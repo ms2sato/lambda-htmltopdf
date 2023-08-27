@@ -73,6 +73,8 @@ exports.handler = async (event) => {
     if (err instanceof InputError) {
       return { statusCode: 400, body: err.message };
     } else {
+      console.error(`Error(500): ${err.message}`)
+      console.error(err);
       return { statusCode: 500, body: err.message };
     }
   }
