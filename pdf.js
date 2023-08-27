@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require("path");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 
@@ -33,10 +33,12 @@ const openAndSave = async ({ key, content, option }) => {
   try {
     const page = await browser.newPage();
 
-    await page.setContent(content);
+    await page.setContent(content, {
+      waitUntil: ["domcontentloaded", "networkidle0"],
+    });
 
     const params = { ...defaultPdfOption, ...option?.pdf };
-    let pdf
+    let pdf;
     if (process.env.DEBUG) {
       const tmpPath = `/tmp/${key}`;
       fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
