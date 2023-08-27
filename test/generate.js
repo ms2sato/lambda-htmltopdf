@@ -27,7 +27,7 @@ const params = {
 };
 
 fs.writeFileSync(
-  "./test/body.json",
+  "./test/event.json",
   JSON.stringify({ body: JSON.stringify(params) }, null, 2)
 );
 

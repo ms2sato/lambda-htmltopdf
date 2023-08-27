@@ -4,16 +4,38 @@ set -e
 
 source ./bin/exports_from_dotenv ".env"
 
-docker build -t ${APP_NAME}:${DOCKER_TAG} .
+if [ -z "$DOCKER_REPOSITORY" ]; then
+  echo "Error: DOCKER_REPOSITORY is not defined."
+  exit 1
+fi
 
-aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
+if [ -z "$AWS_LAMBDA_FUNCTION" ]; then
+  echo "Error: AWS_LAMBDA_FUNCTION is not defined."
+  exit 1
+fi
+
+if [ -z "$DOCKER_DEFAULT_PLATFORM" ]; then
+  export DOCKER_DEFAULT_PLATFORM="linux/amd64"
+fi
+
+readonly src_tag=${APP_NAME:-htmltopdf}:${DOCKER_TAG:-dev}
+docker build -t ${src_tag} .
+aws ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
 
 # @see https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-image.html
 # MUST set latest tag
-docker tag ${APP_NAME}:${DOCKER_TAG} ${DOCKER_REPOSITORY}:latest
+docker tag ${src_tag} ${DOCKER_REPOSITORY}:latest
 docker push ${DOCKER_REPOSITORY}:latest
 
-aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION} --image-uri ${DOCKER_REPOSITORY}:latest --no-cli-pager
+if [ "$DOCKER_DEFAULT_PLATFORM" = "linux/amd64" ]; then
+  arch="x86_64"
+else
+  arch="arm64"
+fi
+
+echo "arch: ${arch}"
+
+aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION} --image-uri ${DOCKER_REPOSITORY}:latest --architectures ${arch}  --no-cli-pager
 
 echo "Waiting for ${AWS_LAMBDA_FUNCTION} to be deployed..."
 aws lambda wait function-updated-v2 --function-name ${AWS_LAMBDA_FUNCTION}
