@@ -1,20 +1,3 @@
 {
-  "key": "mydir/debug1.pdf",
-  "content": "\n    <html>\n      <head>\n        <meta charset=\"utf-8\">\n      </head>\n      <body>\n        <h1>[1]test:日本語:Your awesome PDF report template</h1>\n        <h2 class=\"title\">title</h2>\n      </body>\n    </html>",
-  "option": {
-    "pdf": {
-      "format": "A4",
-      "printBackground": true,
-      "margin": {
-        "top": 20,
-        "left": 20,
-        "right": 20,
-        "bottom": 20
-      },
-      "displayHeaderFooter": true
-    },
-    "signedUrl": {
-      "expiresIn": "3600"
-    }
-  }
+  "body": "{\"key\":\"mydir/debug1.pdf\",\"content\":\"\\n    <html>\\n      <head>\\n        <meta charset=\\\"utf-8\\\">\\n      </head>\\n      <body>\\n        <h1>[1]test:日本語:Your awesome PDF report template</h1>\\n        <h2 class=\\\"title\\\">title</h2>\\n      </body>\\n    </html>\",\"option\":{\"pdf\":{\"format\":\"A4\",\"printBackground\":true,\"margin\":{\"top\":20,\"left\":20,\"right\":20,\"bottom\":20},\"displayHeaderFooter\":true},\"signedUrl\":{\"expiresIn\":\"3600\"}}}"
 }

@@ -26,19 +26,64 @@ if (process.env.LOCAL === "true") {
   client = new S3Client({ region });
 }
 
-exports.handler = async (event) => {
-  const ret = await execute(event);
-  const response = {
-    statusCode: 200,
-    body: { bucket, ...ret },
-  };
-  return response;
+class InputError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "InputError";
+  }
+}
+
+const checkInput = (params) => {
+  if (!params.key) {
+    throw new InputError("params.key is required");
+  }
+  if (!params.content) {
+    throw new InputError("params.content is required");
+  }
+
+  if (params.option) {
+    if (params.option.signedUrl) {
+      if (
+        typeof params.option.signedUrl !== "boolean" &&
+        typeof params.option.signedUrl !== "object"
+      ) {
+        throw new InputError(
+          "params.option.signedUrl must be boolean or object"
+        );
+      }
+    }
+    if (params.option.pdf) {
+      if (typeof params.option.pdf !== "object") {
+        throw new InputError("params.option.pdf must be object");
+      }
+    }
+  }
 };
 
-const execute = async (event) => {
-  const { pdf, key } = await outputPdf(event);
+exports.handler = async (event) => {
+  try {
+    const params = JSON.parse(event.body);
+    checkInput(params);
 
-  const ret = await putToS3(pdf, key, event.option?.signedUrl);
+    const ret = await execute(params);
+    const response = {
+      statusCode: 200,
+      body: { bucket, ...ret },
+    };
+    return response;
+  } catch (err) {
+    if (err instanceof InputError) {
+      return { statusCode: 400, body: err.message };
+    } else {
+      return { statusCode: 500, body: err.message };
+    }
+  }
+};
+
+const execute = async (params) => {
+  const { pdf, key } = await outputPdf(params);
+
+  const ret = await putToS3(pdf, key, params.option?.signedUrl);
   return { key, ...ret };
 };
 

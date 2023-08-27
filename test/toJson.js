@@ -22,8 +22,13 @@ const params = {
     },
     signedUrl: {
       expiresIn: "3600",
-    }
+    },
   },
 };
 
-fs.writeFileSync("./test/body.json", JSON.stringify(params, null, 2));
+fs.writeFileSync(
+  "./test/body.json",
+  JSON.stringify({ body: JSON.stringify(params) }, null, 2)
+);
+
+fs.writeFileSync("./test/params.json", JSON.stringify(params, null, 2));
