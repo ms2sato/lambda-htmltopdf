@@ -12,18 +12,16 @@ if (!process.env.AWS_S3_BUCKET) {
 }
 
 const bucket = process.env.AWS_S3_BUCKET;
-const region = process.env.AWS_REGION || "us-east-1";
 
 let client;
 if (process.env.LOCAL === "true") {
   client = new S3Client({
-    region,
     credentials: { accessKeyId: "FAKE", secretAccessKey: "FAKE" },
     endpoint: "http://localstack:4566",
     forcePathStyle: true,
   });
 } else {
-  client = new S3Client({ region });
+  client = new S3Client();
 }
 
 class InputError extends Error {
