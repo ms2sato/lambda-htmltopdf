@@ -12,7 +12,7 @@ RUN yum update -y \
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY . ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
 CMD [ "index.handler" ]
