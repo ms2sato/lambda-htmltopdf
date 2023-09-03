@@ -28,7 +28,7 @@ const params = {
 
 fs.writeFileSync(
   "./test/event.json",
-  JSON.stringify({ body: JSON.stringify(params) }, null, 2)
+  JSON.stringify({ body: JSON.stringify(params), requestContext: {} }, null, 2)
 );
 
 fs.writeFileSync("./test/params.json", JSON.stringify(params, null, 2));

@@ -33,9 +33,11 @@ else
   arch="arm64"
 fi
 
-echo "arch: ${arch}"
-
-aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION} --image-uri ${DOCKER_REPOSITORY}:latest --architectures ${arch}  --no-cli-pager
+# @see https://stackoverflow.com/questions/56614404/how-to-suppress-aws-lambda-cli-output
+output=$(aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION} --image-uri ${DOCKER_REPOSITORY}:latest --architectures ${arch}  --no-cli-pager 2>&1)
+if [ $? -ne 0 ]; then
+  echo "Error: $output"
+fi
 
 echo "Waiting for ${AWS_LAMBDA_FUNCTION} to be deployed..."
 aws lambda wait function-updated-v2 --function-name ${AWS_LAMBDA_FUNCTION}

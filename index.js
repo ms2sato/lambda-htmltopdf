@@ -31,7 +31,7 @@ class InputError extends Error {
   }
 }
 
-const checkInput = (params) => {
+const checkPayload = (params) => {
   if (!params.key) {
     throw new InputError("params.key is required");
   }
@@ -58,12 +58,26 @@ const checkInput = (params) => {
   }
 };
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
   try {
-    const params = JSON.parse(event.body);
-    checkInput(params);
+    let payload;
+    if (event.requestContext) {
+      // for function URLs
+      payload = JSON.parse(event.body);
+    } else if (event.httpMethod) {
+      // for API Gateway
+      payload = JSON.parse(event.body);
+    } else if (event.Records && event.Records[0]?.s3) {
+      // for S3
+      throw new Error("Not supported");
+    } else {
+      // for test
+      payload = event;
+    }
 
-    const ret = await execute(params);
+    checkPayload(payload);
+
+    const ret = await execute(payload);
     const response = {
       statusCode: 200,
       body: { bucket, ...ret },
@@ -73,7 +87,7 @@ exports.handler = async (event) => {
     if (err instanceof InputError) {
       return { statusCode: 400, body: err.message };
     } else {
-      console.error(`Error(500): ${err.message}`)
+      console.error(`Error(500): ${err.message}`);
       console.error(err);
       return { statusCode: 500, body: err.message };
     }
