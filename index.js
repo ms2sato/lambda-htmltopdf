@@ -85,12 +85,12 @@ exports.handler = async (event, context) => {
     return response;
   } catch (err) {
     if (err instanceof InputError) {
-      return { statusCode: 400, body: err.message };
+      console.error(`Error(400): ${err.message}`);
     } else {
       console.error(`Error(500): ${err.message}`);
-      console.error(err);
-      return { statusCode: 500, body: err.message };
     }
+    console.error(err);
+    throw err;
   }
 };
 
