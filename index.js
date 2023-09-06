@@ -11,7 +11,13 @@ if (!process.env.AWS_S3_BUCKET) {
   throw new Error("AWS_S3_BUCKET is required");
 }
 
-const bucket = process.env.AWS_S3_BUCKET;
+/*
+AWS_S3_BUCKET=pdf-test # simple bucket name
+AWS_S3_BUCKET=pdf-test pdf-test2 # multiple bucket names
+*/
+
+const buckets = process.env.AWS_S3_BUCKET.split(" ");
+console.log(`buckets: ${buckets}`);
 
 let client;
 if (process.env.LOCAL === "true") {
@@ -32,6 +38,12 @@ class InputError extends Error {
 }
 
 const checkPayload = (params) => {
+  if (!params.bucket) {
+    throw new InputError("params.bucket is required");
+  }
+  if (buckets.indexOf(params.bucket) === -1) {
+    throw new InputError(`Unexpected params.bucket ${params.bucket}`);
+  }
   if (!params.key) {
     throw new InputError("params.key is required");
   }
@@ -80,7 +92,7 @@ exports.handler = async (event, context) => {
     const ret = await execute(payload);
     const response = {
       statusCode: 200,
-      body: { bucket, ...ret },
+      body: ret,
     };
     return response;
   } catch (err) {
@@ -97,11 +109,11 @@ exports.handler = async (event, context) => {
 const execute = async (params) => {
   const { pdf, key } = await outputPdf(params);
 
-  const ret = await putToS3(pdf, key, params.option?.signedUrl);
+  const ret = await putToS3(pdf, params.bucket, key, params.option?.signedUrl);
   return { key, ...ret };
 };
 
-const putToS3 = async (pdf, key, signedUrlOption) => {
+const putToS3 = async (pdf, bucket, key, signedUrlOption) => {
   const params = {
     Body: Buffer.from(pdf),
     Bucket: bucket,
@@ -126,5 +138,5 @@ const putToS3 = async (pdf, key, signedUrlOption) => {
     getObjectCommand,
     typeof signedUrlOption === "boolean" ? {} : signedUrlOption
   );
-  return { signedUrl };
+  return { bucket, signedUrl };
 };

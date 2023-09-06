@@ -2,6 +2,7 @@
 const fs = require("fs");
 
 const params = {
+  bucket: "test-bucket",
   key: "mydir/debug1.pdf",
   content: `
     <html>
