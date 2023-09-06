@@ -13,10 +13,10 @@ if (!process.env.AWS_S3_BUCKET) {
 
 /*
 AWS_S3_BUCKET=pdf-test # simple bucket name
-AWS_S3_BUCKET=pdf-test pdf-test2 # multiple bucket names
+AWS_S3_BUCKET=pdf-test,pdf-test2 # multiple bucket names
 */
 
-const buckets = process.env.AWS_S3_BUCKET.split(" ");
+const buckets = process.env.AWS_S3_BUCKET.split(",");
 console.log(`buckets: ${buckets}`);
 
 let client;
