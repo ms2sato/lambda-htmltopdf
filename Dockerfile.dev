@@ -2,7 +2,9 @@ FROM public.ecr.aws/lambda/nodejs:18
 
 RUN yum install -y amazon-linux-extras
 RUN amazon-linux-extras install -y epel
-RUN yum install -y chromium ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
+RUN yum install -y \
+  at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib\
+  ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY package*.json .puppeteerrc.cjs ./
