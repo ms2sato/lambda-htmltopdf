@@ -19,7 +19,13 @@ const defaultPdfOption = {
   displayHeaderFooter: true,
 };
 
-const openAndSave = async ({ key, content, option }) => {
+let page;
+
+const getPage = async () => {
+  if (page) {
+    return page;
+  }
+
   const startTime = performance.now();
 
   const browser = await puppeteer.launch({
@@ -35,37 +41,49 @@ const openAndSave = async ({ key, content, option }) => {
     ],
   });
 
-  console.log(`openAndSave: puppeteer.launch: ${performance.now() - startTime}`);
+  console.log(
+    `openAndSave: puppeteer.launch: ${performance.now() - startTime}`
+  );
+  const startTime1 = performance.now();
+  page = await browser.newPage();
+  console.log(
+    `openAndSave: browser.newPage: ${performance.now() - startTime1}`
+  );
+  return page;
+};
 
-  try {
-    const startTime1 = performance.now();
-    const page = await browser.newPage();
-    console.log(`openAndSave: browser.newPage: ${performance.now() - startTime1}`);
-    const startTime2 = performance.now();
+const openAndSave = async ({ key, content, option }) => {
+  const page = await getPage();
+  const startTime2 = performance.now();
 
-    await page.setContent(content, {
-      waitUntil: ["domcontentloaded", "networkidle0"],
-    });
-    console.log(`openAndSave: page.setContent: ${performance.now() - startTime2}`);
-    const startTime3 = performance.now();
+  // @see https://github.com/puppeteer/puppeteer/issues/728
+  // page.on("request", (request) => {
+  //   console.log(`Intercepted request with URL: ${request.url()}`);
+  //   request.continue();
+  // });
+  // await page.goto(`data:text/html,${content}`, {
+  //   waitUntil: 'networkidle0'
+  // });
 
-    const params = { ...defaultPdfOption, ...option?.pdf };
-    let pdf;
-    if (process.env.DEBUG) {
-      const tmpPath = `/tmp/${key}`;
-      fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
-      pdf = await page.pdf({ path: tmpPath, ...params });
-    } else {
-      pdf = await page.pdf(params);
-    }
-    console.log(`openAndSave: page.pdf: ${performance.now() - startTime3}`);
+  await page.setContent(content, {
+    waitUntil: ["load"], // "networkidle0" is too late 
+  });
 
-    return { pdf, key };
+  console.log(
+    `openAndSave: page.setContent: ${performance.now() - startTime2}`
+  );
+  const startTime3 = performance.now();
 
-    // await page.goto("https://jp.quora.com/");
-    // await page.screenshot({ path: `/tmp/_${Date.now()}.png` });
-    // return await page.pdf({ path: `/tmp/pdfTest.pdf` });
-  } finally {
-    browser.close();
+  const params = { ...defaultPdfOption, ...option?.pdf };
+  let pdf;
+  if (process.env.DEBUG) {
+    const tmpPath = `/tmp/${key}`;
+    fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
+    pdf = await page.pdf({ path: tmpPath, ...params });
+  } else {
+    pdf = await page.pdf(params);
   }
+  console.log(`openAndSave: page.pdf: ${performance.now() - startTime3}`);
+
+  return { pdf, key };
 };
