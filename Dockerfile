@@ -21,7 +21,7 @@ RUN yum update -y \
   && amazon-linux-extras install -y epel \
   && yum install -y \
     at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib \
-    ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts \
+    ipa-gothic-fonts ipa-mincho-fonts \
   && rm -rf /var/cache/yum/* \
   && yum clean all
 
