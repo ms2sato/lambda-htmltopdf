@@ -6,8 +6,11 @@ const puppeteer = require("puppeteer");
 // @see https://qiita.com/masaminh/items/eb9188c15de60b6b1de6#%E3%83%8F%E3%83%9E%E3%81%A3%E3%81%9F%E5%86%85%E5%AE%B9
 
 exports.outputPdf = async (params) => {
+  const startTime = performance.now();
   // return await Promise.all(targets.map((target) => openAndSave(target)));
-  return await openAndSave(params);
+  const ret = await openAndSave(params);
+  console.log(`outputPdf: ${performance.now() - startTime}`);
+  return ret;
 };
 
 const defaultPdfOption = {
@@ -17,6 +20,8 @@ const defaultPdfOption = {
 };
 
 const openAndSave = async ({ key, content, option }) => {
+  const startTime = performance.now();
+
   const browser = await puppeteer.launch({
     headless: "new",
     args: [
@@ -30,12 +35,19 @@ const openAndSave = async ({ key, content, option }) => {
     ],
   });
 
+  console.log(`openAndSave: puppeteer.launch: ${performance.now() - startTime}`);
+
   try {
+    const startTime1 = performance.now();
     const page = await browser.newPage();
+    console.log(`openAndSave: browser.newPage: ${performance.now() - startTime1}`);
+    const startTime2 = performance.now();
 
     await page.setContent(content, {
       waitUntil: ["domcontentloaded", "networkidle0"],
     });
+    console.log(`openAndSave: page.setContent: ${performance.now() - startTime2}`);
+    const startTime3 = performance.now();
 
     const params = { ...defaultPdfOption, ...option?.pdf };
     let pdf;
@@ -46,6 +58,7 @@ const openAndSave = async ({ key, content, option }) => {
     } else {
       pdf = await page.pdf(params);
     }
+    console.log(`openAndSave: page.pdf: ${performance.now() - startTime3}`);
 
     return { pdf, key };
 

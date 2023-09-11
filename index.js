@@ -7,6 +7,8 @@ const {
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
 
+const startTime = performance.now();
+
 if (!process.env.AWS_S3_BUCKET) {
   throw new Error("AWS_S3_BUCKET is required");
 }
@@ -71,6 +73,7 @@ const checkPayload = (params) => {
 };
 
 exports.handler = async (event, context) => {
+  const startTime = performance.now();
   try {
     let payload;
     if (event.requestContext) {
@@ -94,6 +97,8 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       body: ret,
     };
+
+    console.log(`handler: ${performance.now() - startTime}`);
     return response;
   } catch (err) {
     if (err instanceof InputError) {
@@ -102,6 +107,7 @@ exports.handler = async (event, context) => {
       console.error(`Error(500): ${err.message}`);
     }
     console.error(err);
+    console.log(`handler(err): ${performance.now() - startTime}`);
     throw err;
   }
 };
@@ -140,3 +146,5 @@ const putToS3 = async (pdf, bucket, key, signedUrlOption) => {
   );
   return { bucket, signedUrl };
 };
+
+console.log(`bootup: ${performance.now() - startTime}`);
