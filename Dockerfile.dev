@@ -1,8 +1,8 @@
 ARG NODE_VERSION=18
 FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION}
 
-RUN dnf install -y \
-  nss at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib\
+RUN yum install -y \
+  at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib\
   ipa-gothic-fonts ipa-mincho-fonts
 
 WORKDIR ${LAMBDA_TASK_ROOT}
