@@ -99,7 +99,19 @@ exports.handler = async (event, context) => {
     };
 
     console.log(`handler: ${performance.now() - startTime}`);
-    return response;
+    if (event.httpMethod) {
+      const response = {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(ret),
+      };
+
+      return response;
+    } else {
+      return ret;
+    }
   } catch (err) {
     if (err instanceof InputError) {
       console.error(`Error(400): ${err.message}`);
