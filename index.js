@@ -93,10 +93,6 @@ exports.handler = async (event, context) => {
     checkPayload(payload);
 
     const ret = await execute(payload);
-    const response = {
-      statusCode: 200,
-      body: ret,
-    };
 
     console.log(`handler: ${performance.now() - startTime}`);
     if (event.httpMethod) {
