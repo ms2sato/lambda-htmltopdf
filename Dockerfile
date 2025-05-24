@@ -19,7 +19,7 @@ FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION}
 
 ENV NODE_ENV=production
 
-RUN --mount=type=cache,id=yum-cache,target=/var/cache/yum  yum update -y \
+RUN --mount=type=cache,id=yum-cache,target=/var/cache/yum yum update -y \
   && yum install -y amazon-linux-extras \
   && amazon-linux-extras install -y epel \
   && yum install -y \

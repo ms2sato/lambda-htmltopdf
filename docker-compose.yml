@@ -1,15 +1,20 @@
 services:
   app:
     platform: linux/x86_64
+    env_file:
+      - ./.env
     build:
       context: .
       dockerfile: Dockerfile.dev
+      args:
+        - NODE_VERSION=${NODE_VERSION:-18}
     volumes:
       - .:/var/task
       - /var/task/.git
       - /var/task/node_modules
       - /var/task/.cache
       - ./tmp:/tmp
+      - root_npm:/root/.npm
     ports:
       - 9000:8080
     environment:
@@ -31,3 +36,6 @@ services:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./scripts:/etc/localstack/init/ready.d"
+
+volumes:
+  root_npm:

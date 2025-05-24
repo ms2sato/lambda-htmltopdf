@@ -1,15 +1,13 @@
 ARG NODE_VERSION=18
 FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION}
 
-RUN yum install -y amazon-linux-extras
-RUN amazon-linux-extras install -y epel
-RUN yum install -y \
-  at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib\
+RUN dnf install -y \
+  nss at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib\
   ipa-gothic-fonts ipa-mincho-fonts
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY package*.json .puppeteerrc.cjs ./
-RUN npm install
+RUN npm install --prefer-offline
 
 # Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
 CMD [ "index.handler" ]
