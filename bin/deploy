@@ -10,7 +10,7 @@ source ./bin/exports_from_dotenv ".env"
 
 export DOCKER_DEFAULT_PLATFORM="${DOCKER_DEFAULT_PLATFORM:-linux/amd64}"
 
-aws ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
+aws ecr get-login-password --region "${AWS_DEFAULT_REGION:-ap-northeast-1}" | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
 
 # Check if the Docker Buildx builder exists, if not create it
 # @see https://docs.docker.com/buildx/working-with-buildx/
@@ -23,22 +23,28 @@ docker buildx build \
   --push \
   --platform ${DOCKER_DEFAULT_PLATFORM} \
   --builder ${BUILDER} \
+  --provenance=false \
+  --sbom=false \
   --build-arg NODE_VERSION="${NODE_VERSION}" \
   --cache-from type=registry,ref=${DOCKER_REPOSITORY}:buildcache \
   --cache-to   type=registry,ref=${DOCKER_REPOSITORY}:buildcache,mode=max,oci-mediatypes=true,image-manifest=true \
   --tag "${DOCKER_REPOSITORY}:latest" \
   .
 
-if [ "$DOCKER_DEFAULT_PLATFORM" = "linux/amd64" ]; then
-  arch="x86_64"
-else
-  arch="arm64"
-fi
+case "${DOCKER_DEFAULT_PLATFORM}" in
+  linux/amd64) arch="x86_64" ;;
+  linux/arm64) arch="arm64"  ;;
+  *)           echo "Unknown platform"; exit 1 ;;
+esac
 
 # @see https://stackoverflow.com/questions/56614404/how-to-suppress-aws-lambda-cli-output
-output=$(aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION} --image-uri ${DOCKER_REPOSITORY}:latest --architectures ${arch}  --no-cli-pager 2>&1)
-if [ $? -ne 0 ]; then
-  echo "Error: $output"
+if ! output=$(aws lambda update-function-code \
+      --function-name "${AWS_LAMBDA_FUNCTION}" \
+      --image-uri      "${DOCKER_REPOSITORY}:latest" \
+      --architectures  "${arch}" \
+      --no-cli-pager 2>&1); then
+  echo "Error updating Lambda: $output"
+  exit 1
 fi
 
 echo "Waiting for ${AWS_LAMBDA_FUNCTION} to be deployed..."
