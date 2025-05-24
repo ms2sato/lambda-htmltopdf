@@ -1,8 +1,10 @@
-FROM public.ecr.aws/lambda/nodejs:18 as build-stage
+# syntax=docker/dockerfile:1
+ARG NODE_VERSION=18
+FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION} AS build-stage
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
-RUN yum update -y \
+RUN --mount=type=cache,id=yum-cache-build,target=/var/cache/yum yum update -y \
   && yum install -y amazon-linux-extras \
   && amazon-linux-extras install -y epel \
   && yum install -y \
@@ -10,13 +12,14 @@ RUN yum update -y \
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+  npm ci --omit=dev
 
-FROM public.ecr.aws/lambda/nodejs:18
+FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION}
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
-RUN yum update -y \
+RUN --mount=type=cache,id=yum-cache,target=/var/cache/yum  yum update -y \
   && yum install -y amazon-linux-extras \
   && amazon-linux-extras install -y epel \
   && yum install -y \
