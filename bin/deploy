@@ -1,31 +1,33 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 source ./bin/exports_from_dotenv ".env"
 
-if [ -z "$DOCKER_REPOSITORY" ]; then
-  echo "Error: DOCKER_REPOSITORY is not defined."
-  exit 1
-fi
+# ----- Check required variables -----
+: "${DOCKER_REPOSITORY:?Error: DOCKER_REPOSITORY is not defined.}"
+: "${AWS_LAMBDA_FUNCTION:?Error: AWS_LAMBDA_FUNCTION is not defined.}"
 
-if [ -z "$AWS_LAMBDA_FUNCTION" ]; then
-  echo "Error: AWS_LAMBDA_FUNCTION is not defined."
-  exit 1
-fi
+export DOCKER_DEFAULT_PLATFORM="${DOCKER_DEFAULT_PLATFORM:-linux/amd64}"
 
-if [ -z "$DOCKER_DEFAULT_PLATFORM" ]; then
-  export DOCKER_DEFAULT_PLATFORM="linux/amd64"
-fi
-
-readonly src_tag=${APP_NAME:-htmltopdf}:${DOCKER_TAG:-dev}
-docker build -t ${src_tag} .
 aws ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
 
-# @see https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-image.html
-# MUST set latest tag
-docker tag ${src_tag} ${DOCKER_REPOSITORY}:latest
-docker push ${DOCKER_REPOSITORY}:latest
+# Check if the Docker Buildx builder exists, if not create it
+# @see https://docs.docker.com/buildx/working-with-buildx/
+BUILDER=lambda-htmltopdf-builder
+docker buildx inspect "$BUILDER" >/dev/null 2>&1 \
+  || docker buildx create --name "$BUILDER" --driver docker-container --bootstrap
+
+export NODE_VERSION=${NODE_VERSION:-18}
+docker buildx build \
+  --push \
+  --platform ${DOCKER_DEFAULT_PLATFORM} \
+  --builder ${BUILDER} \
+  --build-arg NODE_VERSION="${NODE_VERSION}" \
+  --cache-from type=registry,ref=${DOCKER_REPOSITORY}:buildcache \
+  --cache-to   type=registry,ref=${DOCKER_REPOSITORY}:buildcache,mode=max,oci-mediatypes=true,image-manifest=true \
+  --tag "${DOCKER_REPOSITORY}:latest" \
+  .
 
 if [ "$DOCKER_DEFAULT_PLATFORM" = "linux/amd64" ]; then
   arch="x86_64"
