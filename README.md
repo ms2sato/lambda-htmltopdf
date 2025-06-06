@@ -7,7 +7,7 @@ Lambda function to render HTML into PDF, alternative to wkhtmltopdf. Implemented
 ### Start dev server
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 ### Restart lambda server only
