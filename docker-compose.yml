@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
       args:
-        - NODE_VERSION=${NODE_VERSION:-18}
+        - NODE_VERSION=${NODE_VERSION:-22}
     volumes:
       - .:/var/task
       - /var/task/.git

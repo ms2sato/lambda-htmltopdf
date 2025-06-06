@@ -18,7 +18,7 @@ BUILDER=lambda-htmltopdf-builder
 docker buildx inspect "$BUILDER" >/dev/null 2>&1 \
   || docker buildx create --name "$BUILDER" --driver docker-container --bootstrap
 
-export NODE_VERSION=${NODE_VERSION:-18}
+export NODE_VERSION=${NODE_VERSION:-22}
 docker buildx build \
   --push \
   --platform ${DOCKER_DEFAULT_PLATFORM} \

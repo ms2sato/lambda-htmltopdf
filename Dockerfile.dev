@@ -1,9 +1,11 @@
-ARG NODE_VERSION=18
+ARG NODE_VERSION=22
 FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION}
 
-RUN yum install -y \
-  at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib\
-  ipa-gothic-fonts ipa-mincho-fonts
+RUN microdnf install -y \
+  nss nss-softokn nss-util nspr \
+  at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXrandr mesa-libgbm pango alsa-lib \
+  ipa-gothic-fonts ipa-mincho-fonts && \
+  microdnf clean all
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY package*.json .puppeteerrc.cjs ./
