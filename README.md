@@ -69,8 +69,11 @@ curl -XPOST "https://xxx.lambda-url.xxx.on.aws" -H 'content-type: application/js
 
 ### Create test data
 
-Create `test/event.json` and `test/params.json`.
+Fix `test/generate.js` and run it.
+
 
 ```
 test/generate.js
 ```
+
+`test/event.json` and `test/params.json` will be created.

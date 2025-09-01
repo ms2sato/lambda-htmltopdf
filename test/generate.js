@@ -21,6 +21,9 @@ const params = {
       margin: { top: 20, left: 20, right: 20, bottom: 20 },
       displayHeaderFooter: true,
     },
+    s3: {
+      ContentDisposition: "inline;filename*=testfilename"
+    },
     signedUrl: {
       expiresIn: "3600",
     },

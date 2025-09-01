@@ -46,6 +46,9 @@ const getPage = async () => {
   );
   const startTime1 = performance.now();
   page = await browser.newPage();
+  page.on("pageerror", (error) => {
+    console.log("error on console", error.message);
+  });
   console.log(
     `openAndSave: browser.newPage: ${performance.now() - startTime1}`
   );
