@@ -34,9 +34,13 @@ http://localhost:4566/test-bucket/
 
 ### Prerequisites
 
-- Create new lambda function
+1. Create new ECR
+2. The first deploy to ECR
+  - add `DOCKER_REPOSITORY` environment variable to `.env`
+  - call `bin/ecr-deploy`
+3. Create new lambda function for Docker Image in AWS Lambda console
   - Set environment variable `AWS_S3_BUCKET` as bucket name for writing pdf
-- Create new ECR repository
+  - Add Permission for S3 Bucket on Lambda function role
 
 ### Edit .env
 

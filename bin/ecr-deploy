@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source ./bin/exports_from_dotenv ".env"
+
+# ----- Check required variables -----
+: "${DOCKER_REPOSITORY:?Error: DOCKER_REPOSITORY is not defined.}"
+
+export DOCKER_DEFAULT_PLATFORM="${DOCKER_DEFAULT_PLATFORM:-linux/amd64}"
+
+aws ecr get-login-password --region "${AWS_DEFAULT_REGION:-ap-northeast-1}" | docker login --username AWS --password-stdin ${DOCKER_REPOSITORY}
+
+# Check if the Docker Buildx builder exists, if not create it
+# @see https://docs.docker.com/buildx/working-with-buildx/
+BUILDER=lambda-htmltopdf-builder
+docker buildx inspect "$BUILDER" >/dev/null 2>&1 \
+  || docker buildx create --name "$BUILDER" --driver docker-container --bootstrap
+
+export NODE_VERSION=${NODE_VERSION:-22}
+docker buildx build \
+  --push \
+  --platform ${DOCKER_DEFAULT_PLATFORM} \
+  --builder ${BUILDER} \
+  --provenance=false \
+  --sbom=false \
+  --build-arg NODE_VERSION="${NODE_VERSION}" \
+  --cache-from type=registry,ref=${DOCKER_REPOSITORY}:buildcache \
+  --cache-to   type=registry,ref=${DOCKER_REPOSITORY}:buildcache,mode=max,oci-mediatypes=true,image-manifest=true \
+  --tag "${DOCKER_REPOSITORY}:latest" \
+  .
+
+echo "Docker image pushed to ${DOCKER_REPOSITORY}:latest successfully"
