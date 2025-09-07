@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source ./bin/exports_from_dotenv ".env"
+
+# ----- Check required variables -----
+: "${DOCKER_REPOSITORY:?Error: DOCKER_REPOSITORY is not defined.}"
+: "${AWS_LAMBDA_FUNCTION:?Error: AWS_LAMBDA_FUNCTION is not defined.}"
+
+export DOCKER_DEFAULT_PLATFORM="${DOCKER_DEFAULT_PLATFORM:-linux/amd64}"
+
+case "${DOCKER_DEFAULT_PLATFORM}" in
+  linux/amd64) arch="x86_64" ;;
+  linux/arm64) arch="arm64"  ;;
+  *)           echo "Unknown platform"; exit 1 ;;
+esac
+
+# @see https://stackoverflow.com/questions/56614404/how-to-suppress-aws-lambda-cli-output
+if ! output=$(aws lambda update-function-code \
+      --function-name "${AWS_LAMBDA_FUNCTION}" \
+      --image-uri      "${DOCKER_REPOSITORY}:latest" \
+      --architectures  "${arch}" \
+      --no-cli-pager 2>&1); then
+  echo "Error updating Lambda: $output"
+  exit 1
+fi
+
+echo "Waiting for ${AWS_LAMBDA_FUNCTION} to be deployed..."
+aws lambda wait function-updated-v2 --function-name ${AWS_LAMBDA_FUNCTION}
+echo "Deployed ${AWS_LAMBDA_FUNCTION} successfully"
