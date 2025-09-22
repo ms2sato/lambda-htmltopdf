@@ -52,6 +52,5 @@ RUN --mount=type=cache,id=dnf-cache,target=/var/cache/dnf \
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY package.json package-lock.json .puppeteerrc.cjs *.js ./
 COPY --from=build-stage ${LAMBDA_TASK_ROOT}/node_modules ./node_modules
-COPY --from=build-stage /root/.cache ./.cache
 
 CMD ["index.handler"]

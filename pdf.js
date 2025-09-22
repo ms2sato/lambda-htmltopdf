@@ -1,17 +1,8 @@
+
 const path = require("path");
 const fs = require("fs");
-const puppeteer = require("puppeteer");
-
-// @see https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-on-gitlabci
-// @see https://qiita.com/masaminh/items/eb9188c15de60b6b1de6#%E3%83%8F%E3%83%9E%E3%81%A3%E3%81%9F%E5%86%85%E5%AE%B9
-
-exports.outputPdf = async (params) => {
-  const startTime = performance.now();
-  // return await Promise.all(targets.map((target) => openAndSave(target)));
-  const ret = await openAndSave(params);
-  console.log(`outputPdf: ${performance.now() - startTime}`);
-  return ret;
-};
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium");
 
 const defaultPdfOption = {
   format: "A4",
@@ -19,74 +10,66 @@ const defaultPdfOption = {
   displayHeaderFooter: true,
 };
 
-let page;
-
-const getPage = async () => {
-  if (page) {
-    return page;
-  }
-
-  const startTime = performance.now();
-
-  const browser = await puppeteer.launch({
-    headless: "new",
+async function launchBrowser() {
+  return puppeteer.launch({
+    headless: true,
+    executablePath: await chromium.executablePath(),
+    defaultViewport: chromium.defaultViewport,
     args: [
+      ...chromium.args,
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--disable-gpu",
       "--no-first-run",
-      "--no-zygote",
-      "--single-process",
+      "--no-zygote"
     ],
+    env: {
+      ...process.env,
+      FONTCONFIG_PATH: "/tmp/fontconfig",
+      HOME: "/tmp"
+    },
   });
+}
 
-  console.log(
-    `openAndSave: puppeteer.launch: ${performance.now() - startTime}`
-  );
-  const startTime1 = performance.now();
-  page = await browser.newPage();
-  page.on("pageerror", (error) => {
-    console.log("error on console", error.message);
-  });
-  console.log(
-    `openAndSave: browser.newPage: ${performance.now() - startTime1}`
-  );
-  return page;
-};
-
-const openAndSave = async ({ key, content, option }) => {
-  const page = await getPage();
-  const startTime2 = performance.now();
-
-  // @see https://github.com/puppeteer/puppeteer/issues/728
-  // page.on("request", (request) => {
-  //   console.log(`Intercepted request with URL: ${request.url()}`);
-  //   request.continue();
-  // });
-  // await page.goto(`data:text/html,${content}`, {
-  //   waitUntil: 'networkidle0'
-  // });
-
-  await page.setContent(content, {
-    waitUntil: ["load"], // "networkidle0" is too late 
-  });
-
-  console.log(
-    `openAndSave: page.setContent: ${performance.now() - startTime2}`
-  );
-  const startTime3 = performance.now();
-
-  const params = { ...defaultPdfOption, ...option?.pdf };
-  let pdf;
-  if (process.env.DEBUG) {
-    const tmpPath = `/tmp/${key}`;
-    fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
-    pdf = await page.pdf({ path: tmpPath, ...params });
-  } else {
-    pdf = await page.pdf(params);
+async function renderOnce(browser, html, pdfParams, debugFile) {
+  const page = await browser.newPage();
+  page.on("pageerror", (e) => console.warn("pageerror:", e?.message || e));
+  try {
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    if (debugFile) {
+      fs.mkdirSync(path.dirname(debugFile), { recursive: true });
+      return await page.pdf({ path: debugFile, ...pdfParams });
+    }
+    return await page.pdf(pdfParams);
+  } finally {
+    await page.close().catch(() => {});
   }
-  console.log(`openAndSave: page.pdf: ${performance.now() - startTime3}`);
+}
 
-  return { pdf, key };
+exports.outputPdf = async ({ key, content, option }) => {
+  const startTime = performance.now();
+  const pdfParams = { ...defaultPdfOption, ...option?.pdf };
+  const debugFile = process.env.DEBUG ? `/tmp/${key || "debug.pdf"}` : undefined;
+
+  let browser;
+  try {
+    browser = await launchBrowser();
+    for (let i = 0; i < 2; i++) {
+      try {
+        const pdf = await renderOnce(browser, content, pdfParams, debugFile);
+        console.log(`outputPdf: ${performance.now() - startTime}`);
+        return { pdf, key };
+      } catch (e) {
+        const msg = String(e?.message || e);
+        if (/detached Frame|Target closed|Navigation failed/i.test(msg) && i === 0) {
+          console.warn("retry after transient error:", msg);
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw new Error("unreachable");
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+  }
 };
