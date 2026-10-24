@@ -30,6 +30,22 @@ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -H
 
 http://localhost:4566/test-bucket/
 
+### Local development options
+
+Environment variables for `docker compose` (put them in `.env` or pass on the command line):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `HOST_PORT` | `9000` | Host port of the Lambda RIE. Change it when another RIE-based function (e.g. lambda-xlsxtopdf) already listens on 9000 |
+| `LOCALSTACK_PORT` | `4566` | Host port of LocalStack |
+| `S3_ENDPOINT` | `http://localstack:4566` | S3 endpoint the function uses when `LOCAL=true`. Any S3-compatible store works (e.g. [versitygw](https://github.com/versity/versitygw) with `ROOT_ACCESS_KEY=FAKE` / `ROOT_SECRET_KEY=FAKE`). The signed URL is built from this host, so the client that downloads the PDF must be able to resolve it |
+
+Notes:
+
+- The LocalStack image is pinned to `localstack/localstack:4.0`. The `2026.x` images require a LocalStack license and exit on startup.
+- The image is `linux/x86_64` because `@sparticuz/chromium` ships an x64 binary only. On an arm64 host (Apple Silicon, Linux arm64) run `docker run --privileged --rm tonistiigi/binfmt --install amd64` once; rendering then takes about 15-20 seconds per PDF under emulation.
+- The Lambda RIE handles one invocation at a time and can crash (nil pointer panic) when it receives concurrent requests. Call it sequentially from your tests.
+
 ## Deploy
 
 ### 1st deploy to ECR

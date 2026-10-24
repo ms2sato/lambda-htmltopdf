@@ -23,9 +23,11 @@ console.log(`buckets: ${buckets}`);
 
 let client;
 if (process.env.LOCAL === "true") {
+  // S3_ENDPOINT lets you point at another S3-compatible store (e.g. versitygw) or another host/port.
+  // Note: the signed URL is built from this endpoint's host, so clients must be able to resolve it.
   client = new S3Client({
     credentials: { accessKeyId: "FAKE", secretAccessKey: "FAKE" },
-    endpoint: "http://localstack:4566",
+    endpoint: process.env.S3_ENDPOINT || "http://localstack:4566",
     forcePathStyle: true,
   });
 } else {
